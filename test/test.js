@@ -162,94 +162,30 @@ describe('server', function() {
 				timeout: 1500
 			}
 		}, function(err, meta) {
+
 			should.exist(err);
 			done();
 		});
 	});
-	it('should timeout', function(done) {
+	it('should err from invalid links', function(done) {
 		fetchog.fetch('http://nonexistntmisspeleddomani' + (new Date().getTime()).toString(36) + '.ocm', {
 			http: {
-				timeout: 1
-			}
-		}, function(err, meta) {
-			should.exist(err);
-			err.should.equal("Timeout");
-			done();
-		});
-	});
-	it('should get a return 404 from linc.world', function(done) {
-		fetchog.fetch('http://linc.world/afzaalace/nonexistenturl.pdf', {
-			flags: {
-				images: false,
-				links: false
-			},
-			http: {
-				timeout: 1500
-			}
-		}, function(err, meta) {
-			should.exist(err);
-			err.should.equal(404);
-			done();
-		});
-	});
-	it('should get a return 404 from example.com', function(done) {
-		fetchog.fetch('http://www.example.com/test.pdf', {
-			flags: {
-				images: false,
-				links: false
-			},
-			http: {
-				timeout: 1500
+				timeout: 3000
 			}
 		}, function(err, meta) {
 			should.exist(err);
 			done();
 		});
 	});
-	it('should get a pdf from pdf995.com', function(done) {
-		fetchog.fetch('http://www.pdf995.com/samples/pdf.pdf', {
-			flags: {
-				images: false,
-				links: false
-			},
-			http: {
-				timeout: 1500
-			}
-		}, function(err, meta) {
-			should.not.exist(err);
-			done();
-		});
-	});
-	it('should err', function(done) {
-		fetchog.fetch('http://0.0.0.0/test.pdf', {
-			http: {
-				timeout: 1500
-			}
-		}, function(err, meta) {
-			should.exist(err);
-			done();
-		});
-	});
-	it('should timeout', function(done) {
-		fetchog.fetch('http://nonexistntmisspeleddomani' + (new Date().getTime()).toString(36) + '.ocm/test.pdf', {
-			http: {
-				timeout: 1
-			}
-		}, function(err, meta) {
-			should.exist(err);
-			err.should.equal("Timeout");
-			done();
-		});
-	});
-	it('should redirect too many times.', function(done) {
-		fetchog.fetch('http://127.0.0.1:14444/test.pdf', {
-			http: {
-				timeout: 1500
-			}
-		}, function(err, meta) {
-			should.exist(err);
-			err.should.equal("Too many redirects");
-			done();
-		});
-	});
+  it('should timeout', function(done) {
+    fetchog.fetch('http://google.com', {
+      http: {
+        timeout: 1
+      }
+    }, function(err, meta) {
+      should.exist(err);
+      err.should.equal("Timeout");
+      done();
+    });
+  });
 });
