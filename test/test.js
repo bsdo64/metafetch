@@ -177,6 +177,17 @@ describe('server', function() {
 			done();
 		});
 	});
+	it('should redirect from redirect links', function(done) {
+		fetchog.fetch('http://127.0.0.1:14444', {
+			http: {
+				timeout: 1000
+			}
+		}, function(err, meta) {
+			should.exist(err);
+
+			done();
+		});
+	});
   it('should timeout', function(done) {
     fetchog.fetch('http://google.com', {
       http: {
@@ -185,6 +196,30 @@ describe('server', function() {
     }, function(err, meta) {
       should.exist(err);
       err.should.equal("Timeout");
+      done();
+    });
+  });
+
+  it('should fetch MS949', function(done) {
+    fetchog.fetch('http://cafe.naver.com/joonggonara', {
+      http: {
+        timeout: 1000
+      }
+    }, function(err, meta) {
+      should.not.exist(err);
+      should.exist(meta);
+      should.exist(meta.uri);
+      done();
+    });
+  });
+
+  it('should err with not exist url', function(done) {
+    fetchog.fetch('http://aslkdvjanef.asdvasef', {
+      http: {
+        timeout: 1000
+      }
+    }, function(err, meta) {
+      should.exist(err);
       done();
     });
   });
