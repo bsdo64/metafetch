@@ -1,17 +1,18 @@
-var _ = require('lodash'),
+const _ = require('lodash'),
   cheerio = require('cheerio'),
   charset = require('superagent-charset'),
   rest = require('superagent'),
   URI = require('uri-js'),
+  random_ua = require('modern-random-ua'),
   Client = {};
 
 charset(rest);
 
-var parseMeta = function (url, options, body) {
-  var uri = URI.parse(url);
-  var $ = cheerio.load(body);
-  var response = {};
-  var title;
+const parseMeta = function (url, options, body) {
+  const uri = URI.parse(url);
+  const $ = cheerio.load(body);
+  const response = {};
+  let title;
   if (options.title) {
     title = $('title').text();
   }
@@ -20,9 +21,9 @@ var parseMeta = function (url, options, body) {
   }
 
   if (options.images) {
-    var imagehash = {};
+    const imagehash = {};
     response.images = $('img').map(function () {
-      var src = $(this).attr('src');
+      const src = $(this).attr('src');
       if (src) {
         return URI.resolve(url, src);
       } else {
@@ -35,9 +36,9 @@ var parseMeta = function (url, options, body) {
     });
   }
   if (options.links) {
-    var linkhash = {};
+    const linkhash = {};
     response.links = $('a').map(function () {
-      var href = $(this).attr('href');
+      const href = $(this).attr('href');
       if (href && href.trim().length && href[0] !== "#") {
         return URI.resolve(url, href);
       } else {
@@ -50,11 +51,11 @@ var parseMeta = function (url, options, body) {
       return linkhash.hasOwnProperty(item) ? false : (linkhash[item] = true);
     });
   }
-  var meta = $('meta'),
+  const meta = $('meta'),
     metaData = {};
 
   Object.keys(meta).forEach(function (key) {
-    var attribs = meta[key].attribs;
+    const attribs = meta[key].attribs;
     if (attribs) {
       if (attribs.property) {
         metaData[attribs.property.toLowerCase()] = attribs.content;
@@ -92,12 +93,11 @@ var parseMeta = function (url, options, body) {
 
 Client.fetch = function (url, options, callback) {
   url = url.split("#")[0]; //Remove any anchor fragments
-  var random_ua = require('modern-random-ua');
-  var http_options = {
+  const http_options = {
     timeout: 20000,
     headers: {
-      'Accept': '*/*',
-      'User-Agent': random_ua.generate()
+      accept: '*/*',
+      'user-agent': random_ua.generate()
     },
     followRedirects: false
   };
@@ -127,10 +127,10 @@ Client.fetch = function (url, options, callback) {
     return;
   }
 
-  var redirectCount = 0;
-  var text = function () {
-    var headReq = rest.head(url);
-    var getReq = rest.get(url);
+  let redirectCount = 0;
+  const text = function () {
+    const headReq = rest.head(url);
+    const getReq = rest.get(url);
 
     if (http_options.timeout) {
       getReq.timeout(http_options.timeout);
@@ -143,6 +143,8 @@ Client.fetch = function (url, options, callback) {
     }
 
     headReq.end(function (err, headResult) {
+      const type = headResult.statusType;
+
       if (err && err.timeout) {
         return callback('Timeout');
       }
@@ -150,36 +152,33 @@ Client.fetch = function (url, options, callback) {
         return callback(err);
       }
 
-      const type = headResult.statusType;
-      if (type === 2) {
-
-        let charSet = headResult.charset || 'utf8';
-        if (charSet === 'MS949') {
-          charSet = 'cp949';
-        }
-
-        return getReq
-          .charset(charSet)
-          .end((err, response) => {
-            if (err) {
-              return callback(err);
-            }
-
-            var result = response.text;
-            var meta = parseMeta(url, _options, result);
-            return callback(null, meta);
-          });
-
-      } else if (type === 3) {
+      if (type === 3) {
         redirectCount++;
         if (redirectCount > 5) {
           return callback("Too many redirects");
         }
         url = URI.resolve(url, headResult.headers.location);
         return text();
-      } else if (type < 2 || type > 2) {
+      } else if (type > 5) {
         return callback(headResult.statusCode);
       }
+
+      let charSet = headResult.charset || 'utf8';
+      if (charSet === 'MS949') {
+        charSet = 'cp949';
+      }
+
+      return getReq
+        .charset(charSet)
+        .end((err, response) => {
+          if (err) {
+            return callback(err);
+          }
+
+          const result = response.text;
+          const meta = parseMeta(url, _options, result);
+          return callback(null, meta);
+        });
     });
   };
   text();
